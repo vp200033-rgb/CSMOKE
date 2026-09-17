@@ -1,0 +1,85 @@
+classDiagram
+    direction TB
+
+    %% ================= ENUMERATIONS =================
+    class ThrowType {
+        <<ENUM>>
+        STAND : 0
+        JUMPTHROW : 1
+        RUN_JUMPTHROW : 2
+    }
+
+    class Role {
+        <<ENUM>>
+        GUEST : 0
+        USER : 1
+        ADMIN : 2
+    }
+
+    class Status {
+        <<ENUM>>
+        PENDING : 0
+        APPROVED : 1
+        REJECTED : 2
+    }
+
+    %% ================= DOMAIN ENTITIES =================
+    class Lineup {
+        -id: int
+        -title: string
+        -startX: float
+        -startY: float
+        -endX: float
+        -endY: float
+        -videoUrl: string
+        -crosshairImageUrl: string
+        -throwType: ThrowType
+        -description: string
+        -status: Status
+        -createdAt: datetime
+        +save(): void
+        +updateStatus(status: Status): void
+        +delete(): void
+    }
+
+    class User {
+        -id: int
+        -email: string
+        -passwordHash: string
+        -role: Role
+        -createdAt: datetime
+        +register(): void
+        +login(): string
+        +logout(): void
+    }
+
+    class Map {
+        -id: int
+        -name: string
+        -radarImageUrl: string
+        +getRadars(): List~Map~
+    }
+
+    %% ================= MANAGERS / SERVICES =================
+    class LineupManager {
+        +getLineupsByMap(mapId: int): List~Lineup~
+        +searchLineups(query: string): List~Lineup~
+        +verifyLineup(lineupId: int, newStatus: Status): void
+    }
+
+    %% ================= RELATIONSHIPS =================
+    %% Solid associations with cardinalities and direction labels
+    Lineup "0..*" -- "1" User : creates >
+    User "1" -- "0..*" Lineup : added_by >
+    Lineup "0..*" -- "1" Map : contained in >
+
+    %% Dashed dependency arrows to Enums
+    User ..> Role
+    Lineup ..> ThrowType
+    Lineup ..> Status
+
+    %% Dashed dependency arrows from LineupManager
+    LineupManager ..> Map : selects >
+    LineupManager ..> User : verifies_permissions >
+    LineupManager ..> Lineup : manages >
+    LineupManager ..> Status

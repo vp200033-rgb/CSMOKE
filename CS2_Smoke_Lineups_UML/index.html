@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CS2 Smoke Lineups - UML Class Diagram</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Styling tokens */
+    :root {
+      --background: #0b0f19;
+      --card: #151d2f;
+      --foreground: #f8fafc;
+      --muted-foreground: #94a3b8;
+      --border: #23314d;
+      --primary-accent: #f59e0b; /* CS2 tactical amber */
+      --lineup-color: #3b82f6;
+      --user-color: #10b981;
+      --map-color: #8b5cf6;
+      --enum-color: #ec4899;
+      --manager-color: #f97316;
+    }
+    .uml-card {
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+      transition: all 0.2s ease-in-out;
+    }
+    .uml-card:hover {
+      filter: drop-shadow(0 6px 18px rgba(245, 158, 11, 0.25));
+    }
+    .connector-line {
+      transition: stroke-width 0.2s, stroke 0.2s;
+    }
+    .connector-line:hover {
+      stroke-width: 3px !important;
+      cursor: pointer;
+    }
+    .highlight-active {
+      stroke: #f59e0b !important;
+      stroke-width: 3px !important;
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] font-sans antialiased p-4 md:p-6 min-h-screen">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header Section -->
+    <header class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20">CS2 Smoke Lineups System</span>
+          <span class="text-xs text-[var(--muted-foreground)]">UML 2.5 Class Diagram Specification</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-[var(--foreground)]">Domain Model & Architecture</h1>
+        <p class="text-sm text-[var(--muted-foreground)] mt-1">Full object-oriented specification from whiteboard design: classes, enums, associations, and dependency flows.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btnZoomIn" class="px-3 py-1.5 text-xs font-medium bg-[var(--background)] hover:bg-[var(--border)] border border-[var(--border)] rounded-lg transition-colors">Zoom In +</button>
+        <button id="btnZoomOut" class="px-3 py-1.5 text-xs font-medium bg-[var(--background)] hover:bg-[var(--border)] border border-[var(--border)] rounded-lg transition-colors">Zoom Out -</button>
+        <button id="btnResetZoom" class="px-3 py-1.5 text-xs font-medium bg-[var(--background)] hover:bg-[var(--border)] border border-[var(--border)] rounded-lg transition-colors">Reset</button>
+      </div>
+    </header>
+
+    <!-- Legend and Quick Controls -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-xs">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-2.5 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+        <span class="font-medium">Lineup Entity</span>
+      </div>
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-2.5 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+        <span class="font-medium">User Account</span>
+      </div>
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-2.5 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-purple-500"></span>
+        <span class="font-medium">Map Registry</span>
+      </div>
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-2.5 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-orange-500"></span>
+        <span class="font-medium">LineupManager</span>
+      </div>
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-2.5 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-pink-500"></span>
+        <span class="font-medium">Enumerations</span>
+      </div>
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-2.5 flex items-center gap-2">
+        <div class="w-4 border-t-2 border-dashed border-[var(--muted-foreground)]"></div>
+        <span class="font-medium">Dependencies</span>
+      </div>
+    </div>
+
+    <!-- Main Diagram Canvas Box -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-2 md:p-4 overflow-hidden relative shadow-inner">
+      <div id="canvasViewport" class="overflow-auto max-h-[850px] p-4 flex justify-center items-center select-none cursor-grab active:cursor-grabbing">
+        <svg id="umlSvg" width="1120" height="880" viewBox="0 0 1120 880" class="transition-transform duration-100 ease-out origin-top-left" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Marker Definitions -->
+            <marker id="arrowDashed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="none" stroke="currentColor" stroke-width="1.5" class="text-[var(--muted-foreground)]" />
+            </marker>
+            <marker id="arrowDashedHighlight" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="none" stroke="#f59e0b" stroke-width="1.5" />
+            </marker>
+            <marker id="arrowSolid" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor" stroke="none" class="text-[var(--foreground)]" />
+            </marker>
+            <!-- Drop Shadow for Classes -->
+            <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+              <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.12"/>
+            </filter>
+          </defs>
+
+          <!-- ================= RELATIONSHIP CONNECTORS ================= -->
+          <g id="connectorsLayer">
+            <!-- 1. Lineup <-> User (creates >) Solid Line -->
+            <g class="connector-group" data-relation="Lineup creates User">
+              <path d="M 400 310 L 290 310" stroke="currentColor" stroke-width="1.8" class="text-[var(--foreground)] connector-line" />
+              <!-- Multiplicities & Label -->
+              <text x="375" y="302" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">0..*</text>
+              <text x="335" y="295" font-size="11" font-style="italic" fill="currentColor" class="text-amber-500 font-semibold" text-anchor="middle">creates &gt;</text>
+              <text x="305" y="302" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">1</text>
+            </g>
+
+            <!-- 2. User <-> Lineup (added_by >) Solid Line -->
+            <g class="connector-group" data-relation="User added_by Lineup">
+              <path d="M 290 380 L 400 380" stroke="currentColor" stroke-width="1.8" class="text-[var(--foreground)] connector-line" />
+              <!-- Multiplicities & Label -->
+              <text x="305" y="372" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">1</text>
+              <text x="345" y="398" font-size="11" font-style="italic" fill="currentColor" class="text-emerald-500 font-semibold" text-anchor="middle">added_by &gt;</text>
+              <text x="375" y="372" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">0..*</text>
+            </g>
+
+            <!-- 3. Lineup <-> Map (contained in >) Solid Line -->
+            <g class="connector-group" data-relation="Lineup contained in Map">
+              <path d="M 720 340 L 830 340" stroke="currentColor" stroke-width="1.8" class="text-[var(--foreground)] connector-line" />
+              <!-- Multiplicities & Label -->
+              <text x="735" y="332" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">0..*</text>
+              <text x="775" y="325" font-size="11" font-style="italic" fill="currentColor" class="text-purple-500 font-semibold" text-anchor="middle">contained in &gt;</text>
+              <text x="815" y="332" font-size="11" font-weight="600" fill="currentColor" class="text-[var(--foreground)]">1</text>
+            </g>
+
+            <!-- 4. User -> Role (Dashed Arrow) -->
+            <g class="connector-group" data-relation="User -> Role">
+              <path d="M 180 230 L 180 155" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowDashed)" class="text-[var(--muted-foreground)] connector-line" />
+            </g>
+
+            <!-- 5. Lineup -> ThrowType (Dashed Arrow) -->
+            <g class="connector-group" data-relation="Lineup -> ThrowType">
+              <path d="M 560 210 L 560 155" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowDashed)" class="text-[var(--muted-foreground)] connector-line" />
+            </g>
+
+            <!-- 6. Lineup -> Status (Dashed Arrow) -->
+            <g class="connector-group" data-relation="Lineup -> Status">
+              <path d="M 720 250 Q 770 200 830 150" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowDashed)" class="text-[var(--muted-foreground)] connector-line" />
+            </g>
+
+            <!-- 7. LineupManager -> Map (selects >) Dashed Arrow -->
+            <g class="connector-group" data-relation="LineupManager selects Map">
+              <path d="M 790 730 L 925 730 L 925 435" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowDashed)" class="text-[var(--muted-foreground)] connector-line" />
+              <rect x="825" y="718" width="65" height="18" rx="4" fill="var(--card)" stroke="var(--border)" stroke-width="0.5"/>
+              <text x="857" y="731" font-size="10" font-weight="600" fill="currentColor" class="text-orange-500" text-anchor="middle">selects &gt;</text>
+            </g>
+
+            <!-- 8. LineupManager -> User (verifies_permissions >) Dashed Arrow -->
+            <g class="connector-group" data-relation="LineupManager verifies_permissions User">
+              <path d="M 370 730 L 180 730 L 180 475" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowDashed)" class="text-[var(--muted-foreground)] connector-line" />
+              <rect x="205" y="718" width="130" height="18" rx="4" fill="var(--card)" stroke="var(--border)" stroke-width="0.5"/>
+              <text x="270" y="731" font-size="10" font-weight="600" fill="currentColor" class="text-emerald-500" text-anchor="middle">verifies_permissions &gt;</text>
+            </g>
+
+            <!-- 9. LineupManager -> Lineup (manages >) Dashed Arrow -->
+            <g class="connector-group" data-relation="LineupManager manages Lineup">
+              <path d="M 560 670 L 560 615" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowDashed)" class="text-[var(--muted-foreground)] connector-line" />
+              <rect x="525" y="635" width="70" height="18" rx="4" fill="var(--card)" stroke="var(--border)" stroke-width="0.5"/>
+              <text x="560" y="648" font-size="10" font-weight="600" fill="currentColor" class="text-blue-500" text-anchor="middle">manages &gt;</text>
+            </g>
+
+            <!-- 10. LineupManager -> Status (Dashed Arrow) -->
+            <g class="connector-group" data-relation="LineupManager -> Status">
+              <path d="M 790 700 Q 1040 700 1040 370 T 965 145" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrowDashed)" class="text-[var(--muted-foreground)] connector-line" />
+            </g>
+          </g>
+
+          <!-- ================= ENUMERATIONS (TOP ROW) ================= -->
+
+          <!-- 1. Enum: Role -->
+          <g id="node-Role" class="uml-node cursor-pointer" onclick="inspectNode('Role')">
+            <rect x="70" y="30" width="220" height="115" rx="10" fill="var(--card)" stroke="#ec4899" stroke-width="2" filter="url(#shadow)" />
+            <!-- Header -->
+            <rect x="70" y="30" width="220" height="36" rx="10" fill="#ec4899" fill-opacity="0.12" />
+            <text x="180" y="44" font-size="10" font-weight="600" fill="#ec4899" text-anchor="middle">&lt;&lt;ENUM&gt;&gt;</text>
+            <text x="180" y="58" font-size="14" font-weight="700" fill="currentColor" class="text-[var(--foreground)]" text-anchor="middle">Role</text>
+            <line x1="70" y1="66" x2="290" y2="66" stroke="#ec4899" stroke-width="1" />
+            <!-- Values -->
+            <text x="85" y="84" font-size="12" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">GUEST : 0</text>
+            <text x="85" y="104" font-size="12" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">USER : 1</text>
+            <text x="85" y="124" font-size="12" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">ADMIN : 2</text>
+          </g>
+
+          <!-- 2. Enum: ThrowType -->
+          <g id="node-ThrowType" class="uml-node cursor-pointer" onclick="inspectNode('ThrowType')">
+            <rect x="450" y="30" width="220" height="115" rx="10" fill="var(--card)" stroke="#ec4899" stroke-width="2" filter="url(#shadow)" />
+            <!-- Header -->
+            <rect x="450" y="30" width="220" height="36" rx="10" fill="#ec4899" fill-opacity="0.12" />
+            <text x="560" y="44" font-size="10" font-weight="600" fill="#ec4899" text-anchor="middle">&lt;&lt;ENUM&gt;&gt;</text>
+            <text x="560" y="58" font-size="14" font-weight="700" fill="currentColor" class="text-[var(--foreground)]" text-anchor="middle">ThrowType</text>
+            <line x1="450" y1="66" x2="670" y2="66" stroke="#ec4899" stroke-width="1" />
+            <!-- Values -->
+            <text x="465" y="84" font-size="12" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">STAND : 0</text>
+            <text x="465" y="104" font-size="12" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">JUMPTHROW : 1</text>
+            <text x="465" y="124" font-size="12" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">RUN_JUMPTHROW : 2</text>
+          </g>
+
+          <!-- 3. Enum: Status -->
+          <g id="node-Status" class="uml-node cursor-pointer" onclick="inspectNode('Status')">
+            <rect x="830" y="30" width="220" height="115" rx="10" fill="var(--card)" stroke="#ec4899" stroke-width="2" filter="url(#shadow)" />
+            <!-- Header -->
+            <rect x="830" y="30" width="220" height="36" rx="10" fill="#ec4899" fill-opacity="0.12" />
+            <text x="940" y="44" font-size="10" font-weight="600" fill="#ec4899" text-anchor="middle">&lt;&lt;ENUM&gt;&gt;</text>
+            <text x="940" y="58" font-size="14" font-weight="700" fill="currentColor" class="text-[var(--foreground)]" text-anchor="middle">Status</text>
+            <line x1="830" y1="66" x2="1050" y2="66" stroke="#ec4899" stroke-width="1" />
+            <!-- Values -->
+            <text x="845" y="84" font-size="12" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">PENDING : 0</text>
+            <text x="845" y="104" font-size="12" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">APPROVED : 1</text>
+            <text x="845" y="124" font-size="12" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">REJECTED : 2</text>
+          </g>
+
+          <!-- ================= CORE CLASSES (MIDDLE ROW) ================= -->
+
+          <!-- 4. Class: User -->
+          <g id="node-User" class="uml-node cursor-pointer" onclick="inspectNode('User')">
+            <rect x="70" y="230" width="220" height="240" rx="10" fill="var(--card)" stroke="#10b981" stroke-width="2" filter="url(#shadow)" />
+            <!-- Header -->
+            <rect x="70" y="230" width="220" height="38" rx="10" fill="#10b981" fill-opacity="0.12" />
+            <text x="180" y="254" font-size="15" font-weight="700" fill="currentColor" class="text-[var(--foreground)]" text-anchor="middle">User</text>
+            <line x1="70" y1="268" x2="290" y2="268" stroke="#10b981" stroke-width="1" />
+            <!-- Attributes -->
+            <text x="82" y="286" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- id: int</text>
+            <text x="82" y="304" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- email: string</text>
+            <text x="82" y="322" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- passwordHash: string</text>
+            <text x="82" y="340" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- role: Role</text>
+            <text x="82" y="358" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- createdAt: datetime</text>
+            <!-- Separator -->
+            <line x1="70" y1="372" x2="290" y2="372" stroke="var(--border)" stroke-width="1" />
+            <!-- Methods -->
+            <text x="82" y="392" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">+ register(): void</text>
+            <text x="82" y="412" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">+ login(): string</text>
+            <text x="82" y="432" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">+ logout(): void</text>
+          </g>
+
+          <!-- 5. Class: Lineup -->
+          <g id="node-Lineup" class="uml-node cursor-pointer" onclick="inspectNode('Lineup')">
+            <rect x="400" y="210" width="320" height="400" rx="10" fill="var(--card)" stroke="#3b82f6" stroke-width="2.2" filter="url(#shadow)" />
+            <!-- Header -->
+            <rect x="400" y="210" width="320" height="38" rx="10" fill="#3b82f6" fill-opacity="0.12" />
+            <text x="560" y="234" font-size="16" font-weight="700" fill="currentColor" class="text-[var(--foreground)]" text-anchor="middle">Lineup</text>
+            <line x1="400" y1="248" x2="720" y2="248" stroke="#3b82f6" stroke-width="1.2" />
+            <!-- Attributes -->
+            <text x="415" y="267" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- id: int</text>
+            <text x="415" y="285" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- title: string</text>
+            <text x="415" y="303" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- startX: float</text>
+            <text x="415" y="321" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- startY: float</text>
+            <text x="415" y="339" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- endX: float</text>
+            <text x="415" y="357" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- endY: float</text>
+            <text x="415" y="375" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- videoUrl: string</text>
+            <text x="415" y="393" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- crosshairImageUrl: string</text>
+            <text x="415" y="411" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- throwType: ThrowType</text>
+            <text x="415" y="429" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- description: string</text>
+            <text x="415" y="447" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- status: Status</text>
+            <text x="415" y="465" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- createdAt: datetime</text>
+            <!-- Separator -->
+            <line x1="400" y1="480" x2="720" y2="480" stroke="var(--border)" stroke-width="1" />
+            <!-- Methods -->
+            <text x="415" y="504" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">+ save(): void</text>
+            <text x="415" y="526" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">+ updateStatus(status: Status): void</text>
+            <text x="415" y="548" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">+ delete(): void</text>
+          </g>
+
+          <!-- 6. Class: Map -->
+          <g id="node-Map" class="uml-node cursor-pointer" onclick="inspectNode('Map')">
+            <rect x="830" y="240" width="220" height="195" rx="10" fill="var(--card)" stroke="#8b5cf6" stroke-width="2" filter="url(#shadow)" />
+            <!-- Header -->
+            <rect x="830" y="240" width="220" height="38" rx="10" fill="#8b5cf6" fill-opacity="0.12" />
+            <text x="940" y="264" font-size="15" font-weight="700" fill="currentColor" class="text-[var(--foreground)]" text-anchor="middle">Map</text>
+            <line x1="830" y1="278" x2="1050" y2="278" stroke="#8b5cf6" stroke-width="1" />
+            <!-- Attributes -->
+            <text x="842" y="298" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- id: int</text>
+            <text x="842" y="318" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- name: string</text>
+            <text x="842" y="338" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">- radarImageUrl: string</text>
+            <!-- Separator -->
+            <line x1="830" y1="354" x2="1050" y2="354" stroke="var(--border)" stroke-width="1" />
+            <!-- Methods -->
+            <text x="842" y="378" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">+ getRadars(): List&lt;Map&gt;</text>
+          </g>
+
+          <!-- ================= SERVICE / CONTROLLER (BOTTOM ROW) ================= -->
+
+          <!-- 7. Class: LineupManager -->
+          <g id="node-LineupManager" class="uml-node cursor-pointer" onclick="inspectNode('LineupManager')">
+            <rect x="370" y="670" width="420" height="150" rx="10" fill="var(--card)" stroke="#f97316" stroke-width="2.2" filter="url(#shadow)" />
+            <!-- Header -->
+            <rect x="370" y="670" width="420" height="38" rx="10" fill="#f97316" fill-opacity="0.12" />
+            <text x="580" y="694" font-size="15" font-weight="700" fill="currentColor" class="text-[var(--foreground)]" text-anchor="middle">LineupManager</text>
+            <line x1="370" y1="708" x2="790" y2="708" stroke="#f97316" stroke-width="1.2" />
+            <!-- Methods (Manager class has operations) -->
+            <text x="388" y="732" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">+ getLineupsByMap(mapId: int): List&lt;Lineup&gt;</text>
+            <text x="388" y="756" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">+ searchLineups(query: string): List&lt;Lineup&gt;</text>
+            <text x="388" y="780" font-size="11.5" font-family="monospace" fill="currentColor" class="text-[var(--foreground)]">+ verifyLineup(lineupId: int, newStatus: Status): void</text>
+          </g>
+        </svg>
+      </div>
+      <div class="text-[11px] text-center text-[var(--muted-foreground)] py-1.5 border-t border-[var(--border)]">
+        💡 Click on any class or enum to view its field specifications, responsibilities, and relationships.
+      </div>
+    </div>
+
+    <!-- Inspector & Details Drawer -->
+    <div id="inspectorPanel" class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 md:p-6 shadow-sm transition-all">
+      <div class="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">
+        <div class="flex items-center gap-3">
+          <span id="inspectBadge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20">Class</span>
+          <h3 id="inspectTitle" class="text-xl font-bold">Lineup</h3>
+        </div>
+        <span class="text-xs text-[var(--muted-foreground)]">Domain Element Inspector</span>
+      </div>
+      <div id="inspectContent" class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+        <!-- Content will be injected by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Mermaid Markdown Source Tab -->
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 md:p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h3 class="font-bold text-base">Mermaid UML Class Diagram Code</h3>
+          <p class="text-xs text-[var(--muted-foreground)]">Standard Mermaid syntax compatible with GitHub, Obsidian, Notion, and Antigravity chat.</p>
+        </div>
+        <button onclick="copyMermaid()" id="copyBtn" class="px-3 py-1.5 text-xs font-medium bg-[var(--background)] hover:bg-[var(--border)] border border-[var(--border)] rounded-lg transition-colors flex items-center gap-1.5">
+          <span>📋 Copy Mermaid</span>
+        </button>
+      </div>
+      <pre id="mermaidCodeBlock" class="p-4 rounded-xl bg-black/40 text-emerald-400 font-mono text-xs overflow-x-auto border border-[var(--border)] leading-relaxed">
+classDiagram
+    direction TB
+
+    class ThrowType {
+        &lt;&lt;ENUM&gt;&gt;
+        STAND : 0
+        JUMPTHROW : 1
+        RUN_JUMPTHROW : 2
+    }
+
+    class Role {
+        &lt;&lt;ENUM&gt;&gt;
+        GUEST : 0
+        USER : 1
+        ADMIN : 2
+    }
+
+    class Status {
+        &lt;&lt;ENUM&gt;&gt;
+        PENDING : 0
+        APPROVED : 1
+        REJECTED : 2
+    }
+
+    class Lineup {
+        -int id
+        -string title
+        -float startX
+        -float startY
+        -float endX
+        -float endY
+        -string videoUrl
+        -string crosshairImageUrl
+        -ThrowType throwType
+        -string description
+        -Status status
+        -datetime createdAt
+        +save(): void
+        +updateStatus(status: Status): void
+        +delete(): void
+    }
+
+    class User {
+        -int id
+        -string email
+        -string passwordHash
+        -Role role
+        -datetime createdAt
+        +register(): void
+        +login(): string
+        +logout(): void
+    }
+
+    class Map {
+        -int id
+        -string name
+        -string radarImageUrl
+        +getRadars(): List~Map~
+    }
+
+    class LineupManager {
+        +getLineupsByMap(mapId: int): List~Lineup~
+        +searchLineups(query: string): List~Lineup~
+        +verifyLineup(lineupId: int, newStatus: Status): void
+    }
+
+    %% Associations (Solid lines with multiplicities)
+    Lineup "0..*" -- "1" User : creates &gt;
+    User "1" -- "0..*" Lineup : added_by &gt;
+    Lineup "0..*" -- "1" Map : contained in &gt;
+
+    %% Dependencies (Dashed arrows)
+    User ..&gt; Role
+    Lineup ..&gt; ThrowType
+    Lineup ..&gt; Status
+
+    LineupManager ..&gt; Map : selects &gt;
+    LineupManager ..&gt; User : verifies_permissions &gt;
+    LineupManager ..&gt; Lineup : manages &gt;
+    LineupManager ..&gt; Status</pre>
+    </div>
+
+  </div>
+
+  <script>
+    // Zoom and Pan state
+    let zoomLevel = 1.0;
+    const svg = document.getElementById('umlSvg');
+    
+    document.getElementById('btnZoomIn').addEventListener('click', () => {
+      zoomLevel = Math.min(zoomLevel + 0.15, 1.8);
+      applyZoom();
+    });
+    document.getElementById('btnZoomOut').addEventListener('click', () => {
+      zoomLevel = Math.max(zoomLevel - 0.15, 0.6);
+      applyZoom();
+    });
+    document.getElementById('btnResetZoom').addEventListener('click', () => {
+      zoomLevel = 1.0;
+      applyZoom();
+    });
+
+    function applyZoom() {
+      svg.style.transform = `scale(${zoomLevel})`;
+    }
+
+    // Element data dictionary for interactive inspector
+    const dataDict = {
+      Lineup: {
+        badge: 'Class (Entity)',
+        color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+        desc: 'Core domain model representing a specific Counter-Strike 2 smoke throw setup on a competitive radar map.',
+        attributes: [
+          { name: 'id', type: 'int', desc: 'Primary identifier' },
+          { name: 'title', type: 'string', desc: 'Descriptive title (e.g. Mirage Window from T-Roof)' },
+          { name: 'startX / startY', type: 'float', desc: 'Normalized player coordinates on radar overview' },
+          { name: 'endX / endY', type: 'float', desc: 'Normalized smoke bloom / landing location' },
+          { name: 'videoUrl', type: 'string', desc: 'Embedded demonstration or clip URL' },
+          { name: 'crosshairImageUrl', type: 'string', desc: 'Screenshot highlighting alignment reference points' },
+          { name: 'throwType', type: 'ThrowType', desc: 'Mechanical execution type (Stand / Jump / Run-Jump)' },
+          { name: 'description', type: 'string', desc: 'Textual instructions and lineup tips' },
+          { name: 'status', type: 'Status', desc: 'Moderation status (Pending, Approved, Rejected)' },
+          { name: 'createdAt', type: 'datetime', desc: 'Creation timestamp' }
+        ],
+        methods: [
+          '+ save(): void',
+          '+ updateStatus(status: Status): void',
+          '+ delete(): void'
+        ],
+        relations: [
+          '0..* creates > 1 User (Authored by user)',
+          '0..* contained in > 1 Map (Bound to map radar)',
+          '..> ThrowType (Enum dependency)',
+          '..> Status (Enum dependency)'
+        ]
+      },
+      User: {
+        badge: 'Class (Entity)',
+        color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+        desc: 'Account holder responsible for creating lineups and managing submission permissions.',
+        attributes: [
+          { name: 'id', type: 'int', desc: 'Unique user identifier' },
+          { name: 'email', type: 'string', desc: 'User authentication email address' },
+          { name: 'passwordHash', type: 'string', desc: 'Securely hashed credentials' },
+          { name: 'role', type: 'Role', desc: 'Authorization tier (Guest / User / Admin)' },
+          { name: 'createdAt', type: 'datetime', desc: 'Account registration timestamp' }
+        ],
+        methods: [
+          '+ register(): void',
+          '+ login(): string (returns auth session token)',
+          '+ logout(): void'
+        ],
+        relations: [
+          '1 added_by > 0..* Lineup',
+          '..> Role (Enum dependency)'
+        ]
+      },
+      Map: {
+        badge: 'Class (Entity)',
+        color: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
+        desc: 'Competitive CS2 map containing spatial radar imagery and radar-mapped lineups.',
+        attributes: [
+          { name: 'id', type: 'int', desc: 'Map ID (e.g. 1 = Mirage, 2 = Inferno, 3 = Nuke)' },
+          { name: 'name', type: 'string', desc: 'Official map name (e.g. de_mirage)' },
+          { name: 'radarImageUrl', type: 'string', desc: 'High-resolution top-down radar texture' }
+        ],
+        methods: [
+          '+ getRadars(): List<Map>'
+        ],
+        relations: [
+          '1 < contained in 0..* Lineup',
+          'LineupManager selects > Map'
+        ]
+      },
+      LineupManager: {
+        badge: 'Service / Controller',
+        color: 'text-orange-500 bg-orange-500/10 border-orange-500/20',
+        desc: 'Stateless orchestrator that handles querying, search indexing, permission verification, and moderation approvals.',
+        attributes: [],
+        methods: [
+          '+ getLineupsByMap(mapId: int): List<Lineup>',
+          '+ searchLineups(query: string): List<Lineup>',
+          '+ verifyLineup(lineupId: int, newStatus: Status): void'
+        ],
+        relations: [
+          'selects > Map',
+          'verifies_permissions > User',
+          'manages > Lineup',
+          '..> Status'
+        ]
+      },
+      Role: {
+        badge: 'Enum <<ENUM>>',
+        color: 'text-pink-500 bg-pink-500/10 border-pink-500/20',
+        desc: 'Permission levels governing system actions (read-only guest, lineup creator user, or verifier admin).',
+        attributes: [
+          { name: 'GUEST', type: '0', desc: 'Can browse and search approved lineups' },
+          { name: 'USER', type: '1', desc: 'Can submit lineups and edit own submissions' },
+          { name: 'ADMIN', type: '2', desc: 'Can verify, approve, reject, or delete any lineup' }
+        ],
+        methods: [],
+        relations: ['Target of User ..> Role dependency']
+      },
+      ThrowType: {
+        badge: 'Enum <<ENUM>>',
+        color: 'text-pink-500 bg-pink-500/10 border-pink-500/20',
+        desc: 'CS2 mechanical grenade throwing technique required for the smoke trajectory.',
+        attributes: [
+          { name: 'STAND', type: '0', desc: 'Stationary throw (Left click / Right click)' },
+          { name: 'JUMPTHROW', type: '1', desc: 'Simultaneous jump + release' },
+          { name: 'RUN_JUMPTHROW', type: '2', desc: 'Forward movement step + jumpthrow' }
+        ],
+        methods: [],
+        relations: ['Target of Lineup ..> ThrowType dependency']
+      },
+      Status: {
+        badge: 'Enum <<ENUM>>',
+        color: 'text-pink-500 bg-pink-500/10 border-pink-500/20',
+        desc: 'Publication lifecycle state of a community-submitted lineup.',
+        attributes: [
+          { name: 'PENDING', type: '0', desc: 'Awaiting administrator verification' },
+          { name: 'APPROVED', type: '1', desc: 'Live in public map search' },
+          { name: 'REJECTED', type: '2', desc: 'Declined due to incorrect geometry or duplicate' }
+        ],
+        methods: [],
+        relations: [
+          'Target of Lineup ..> Status dependency',
+          'Target of LineupManager ..> Status dependency'
+        ]
+      }
+    };
+
+    function inspectNode(key) {
+      const data = dataDict[key];
+      if (!data) return;
+
+      const badge = document.getElementById('inspectBadge');
+      badge.className = `px-2.5 py-0.5 rounded-full text-xs font-semibold border ${data.color}`;
+      badge.textContent = data.badge;
+
+      document.getElementById('inspectTitle').textContent = key;
+
+      let html = `
+        <div>
+          <h4 class="font-semibold text-xs text-[var(--muted-foreground)] uppercase tracking-wider mb-2">Description</h4>
+          <p class="text-sm leading-relaxed mb-4">${data.desc}</p>
+          <h4 class="font-semibold text-xs text-[var(--muted-foreground)] uppercase tracking-wider mb-2">Relationships</h4>
+          <ul class="space-y-1 text-xs font-mono">
+            ${data.relations.map(r => `<li class="p-1.5 rounded bg-[var(--background)] border border-[var(--border)]">${r}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="col-span-1 md:col-span-2">
+          ${data.attributes.length ? `
+            <h4 class="font-semibold text-xs text-[var(--muted-foreground)] uppercase tracking-wider mb-2">${key.includes('Type') || key === 'Role' || key === 'Status' ? 'Enum Values' : 'Attributes'}</h4>
+            <div class="overflow-x-auto border border-[var(--border)] rounded-xl mb-4">
+              <table class="w-full text-xs text-left">
+                <thead class="bg-[var(--background)] text-[var(--muted-foreground)] border-b border-[var(--border)]">
+                  <tr>
+                    <th class="p-2 font-medium">Identifier</th>
+                    <th class="p-2 font-medium">Type / Value</th>
+                    <th class="p-2 font-medium">Description</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--border)]">
+                  ${data.attributes.map(a => `
+                    <tr>
+                      <td class="p-2 font-mono font-semibold text-[var(--foreground)]">${a.name}</td>
+                      <td class="p-2 font-mono text-amber-500">${a.type}</td>
+                      <td class="p-2 text-[var(--muted-foreground)]">${a.desc}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+
+          ${data.methods.length ? `
+            <h4 class="font-semibold text-xs text-[var(--muted-foreground)] uppercase tracking-wider mb-2">Operations & Methods</h4>
+            <div class="space-y-1.5">
+              ${data.methods.map(m => `
+                <div class="px-3 py-1.5 rounded-lg bg-[var(--background)] border border-[var(--border)] font-mono text-xs text-emerald-400">
+                  ${m}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+      document.getElementById('inspectContent').innerHTML = html;
+    }
+
+    // Default inspection on load
+    inspectNode('Lineup');
+
+    function copyMermaid() {
+      const code = document.getElementById('mermaidCodeBlock').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.innerHTML = '<span>✅ Copied!</span>';
+        setTimeout(() => {
+          btn.innerHTML = '<span>📋 Copy Mermaid</span>';
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
