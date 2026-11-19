@@ -1,0 +1,226 @@
+================================================================================
+   CS2 TACTICAL LINEUPS - INSTRUKCJA BAZY DANYCH I BACKENDU DLA ZESPOŁU
+================================================================================
+Projekt: Baza Granatów Dymnych Counter-Strike 2
+Ścieżka projektu: C:\Users\4A\Documents\cs2lineups
+Data: Listopad 2026
+Zgodność: Diagram UML, GitHub, PostgreSQL, MySQL, SQLite, REST API
+
+Cześć! Ten plik tekstowy to przewodnik krok po kroku dla każdego członka zespołu.
+Niezależnie od tego, czy pracujesz w Node.js, Pythonie, czy chcesz po prostu
+uruchomić bazę w 1 minutę bez instalacji - poniżej znajdziesz wszystko, co potrzebne.
+
+
+================================================================================
+SPIS TREŚCI
+================================================================================
+1. STRUKTURA DANYCH I MAPOWANIE DIAGRAMU UML
+2. WYBÓR BAZY DANYCH - 5 OPCJI DLA ZESPOŁU:
+   - Opcja 1: SQLite (Najprostsza, zero instalacji, gotowa w 1 minutę)
+   - Opcja 2: Darmowa Chmura (Supabase / Neon - wspólna baza online dla wszystkich)
+   - Opcja 3: PostgreSQL lokalnie (pgAdmin / DBeaver)
+   - Opcja 4: MySQL / XAMPP / phpMyAdmin
+   - Opcja 5: Docker (Jedno polecenie: docker compose up)
+3. ANALIZA SCHEMATU TABEL (database/schema.sql)
+4. GOTOWY BACKEND REST API W FOLDERZE backend/
+5. JAK SPIĄĆ FRONTEND Z BAZĄ DANYCH (1 linijka w storageService.js)
+6. ZASADY PRACY W ZESPOLE NA GITHUBIE (Bez konfliktów)
+
+
+================================================================================
+1. STRUKTURA DANYCH I MAPOWANIE DIAGRAMU UML
+================================================================================
+Nasza baza danych zawiera 3 kluczowe tabele powiązane relacjami kluczy obcych:
+
+1. TABELA "users" (Klasa User w UML)
+   - id             : unikalny identyfikator użytkownika (Primary Key)
+   - email          : unikalny e-mail
+   - nickname       : nazwa gracza
+   - password_hash  : zahaszowane hasło
+   - role           : rola gracza:
+                      * 0 = GUEST (Gość - tylko przeglądanie rzutów)
+                      * 1 = USER  (Zwykły użytkownik - dodawanie własnych lineupów)
+                      * 2 = ADMIN (Administrator - zatwierdzanie / odrzucanie rzutów)
+   - created_at     : data utworzenia konta
+
+2. TABELA "maps" (Klasa Mapa w UML)
+   - id             : identyfikator mapy (1: Mirage, 2: Dust II, 3: Ancient...)
+   - name           : nazwa techniczna silnika gry (np. 'de_ancient')
+   - display_name   : czytelna nazwa dla gracza (np. 'Ancient')
+   - radar_image_url: ścieżka do widoku mapy z góry (np. 'mapy/ancient.png')
+   - logo_image_url : ścieżka do logo mapy w menu (np. 'mapy/ancient_logo.png')
+   - active_pool    : czy mapa jest w puli turniejowej (TRUE / FALSE)
+   - description    : opis taktyczny mapy
+
+3. TABELA "lineups" (Klasa Lineup w UML)
+   - id                  : identyfikator rzutu (Primary Key)
+   - map_id              : klucz obcy do tabeli maps
+   - user_id             : klucz obcy do tabeli users (autor rzutu)
+   - title               : tytuł rzutu (np. 'Ancient: Smoke Drzwi na Mid z T-Spawn')
+   - start_x, start_y    : współrzędne gracza w procentach (0.00% do 100.00%)
+   - end_x, end_y        : współrzędne lądowania dymu w procentach
+   - video_url           : opcjonalny link do wideo
+   - crosshair_image_url : zrzut celownika (Aim) z gry CS2
+   - standing_image_url  : zrzut pozycji ciała gracza (gdzie stanąć)
+   - landing_image_url   : zrzut rozpostartej chmury dymu
+   - throw_type          : typ rzutu:
+                           * 0 = STAND (Rzut z miejsca)
+                           * 1 = JUMPTHROW (Rzut ze skoku)
+                           * 2 = RUN_JUMPTHROW (Rzut z biegu i skoku)
+   - description         : opis i wskazówki rzutu
+   - status              : status moderacji:
+                           * 0 = PENDING (Oczekuje na akceptację przez Administratora)
+                           * 1 = APPROVED (Zatwierdzony przez Administratora - widoczny dla wszystkich)
+                           * 2 = REJECTED (Odrzucony przez Administratora)
+   - side                : 'T' lub 'CT'
+   - site                : 'MID', 'A', 'B'
+   - created_at          : data dodania
+
+
+================================================================================
+2. WYBÓR BAZY DANYCH - 5 OPCJI DLA ZESPOŁU
+================================================================================
+
+Wybierzcie z kolegami opcję, która najbardziej Wam odpowiada:
+
+--------------------------------------------------------------------------------
+OPCJA 1: SQLite (Najprostsza - Zero instalacji serwerów, 1 minuta)
+--------------------------------------------------------------------------------
+Nie musicie niczego instalować! Baza danych to pojedynczy plik cs2lineups.db.
+1. Otwórz terminal w folderze backendu:
+     cd backend
+     npm install
+2. Utwórz bazę SQLite i załaduj dane jednym poleceniem:
+     npm run init-db
+3. Uruchom serwer API:
+     npm start
+Backend działa pod adresem http://localhost:3000/api!
+
+--------------------------------------------------------------------------------
+OPCJA 2: Darmowa Chmura (Supabase / Neon - POLECANA DLA ZESPOŁU)
+--------------------------------------------------------------------------------
+Każdy z Was łączy się przez Internet do tej samej wspólnej bazy danych.
+1. Wejdź na https://supabase.com lub https://neon.tech i zaloguj się kontem GitHub.
+2. Utwórz nowy projekt (darmowy Free tier).
+3. Wejdź w zakładkę "SQL Editor".
+4. Otwórz plik database/schema.sql, skopiuj całą jego treść i wklej w edytorze.
+5. Kliknij przycisk RUN.
+6. Skopiuj swój adres połączenia (Connection String URI) z ustawień bazy:
+     postgresql://postgres:[HASLO]@db.xxx.supabase.co:5432/postgres
+7. Wklej ten adres do pliku backend/.env w linijce DATABASE_URL.
+
+--------------------------------------------------------------------------------
+OPCJA 3: PostgreSQL Lokalnie (pgAdmin / DBeaver)
+--------------------------------------------------------------------------------
+Jeśli masz zainstalowany PostgreSQL na swoim komputerze:
+1. Otwórz pgAdmin lub DBeaver.
+2. Utwórz nową bazę danych o nazwie: cs2lineups
+3. Otwórz narzędzie zapytań (Query Tool) dla bazy cs2lineups.
+4. Otwórz plik database/schema.sql i wklej jego treść.
+5. Naciśnij F5 (Wykonaj zapytanie).
+6. Tabele i dane początkowe zostaną utworzone w ułamku sekundy.
+
+--------------------------------------------------------------------------------
+OPCJA 4: MySQL / XAMPP / phpMyAdmin
+--------------------------------------------------------------------------------
+Jeśli używacie pakietu XAMPP:
+1. Uruchom XAMPP i kliknij "Start" przy MySQL.
+2. Otwórz w przeglądarce: http://localhost/phpmyadmin
+3. Utwórz nową bazę danych: cs2lineups (kodowanie: utf8mb4_unicode_ci).
+4. Kliknij zakładkę "Import", wybierz plik database/schema.sql i kliknij "Wykonaj".
+
+--------------------------------------------------------------------------------
+OPCJA 5: Docker (Jedno polecenie)
+--------------------------------------------------------------------------------
+Jeśli korzystacie z Dockera, w głównym katalogu znajduje się plik docker-compose.yml:
+Wpisz w konsoli:
+  docker compose up -d
+Uruchomi to bazę PostgreSQL na porcie 5432 oraz graficzny interfejs pgAdmin na porcie 5050.
+
+
+================================================================================
+3. ANALIZA SCHEMATU TABEL (database/schema.sql)
+================================================================================
+Plik database/schema.sql zawiera:
+- DDL (CREATE TABLE IF NOT EXISTS) dla tabel users, maps, lineups.
+- Klucze obce z kaskadowym usuwaniem (ON DELETE CASCADE dla maps, SET NULL dla users).
+- Dane początkowe (Seed Data):
+  * Domyślnego administratora (id: 1, email: admin@cs2lineups.local, rola: 2)
+  * Domyślnego gracza (id: 2, email: player@cs2lineups.local, rola: 1)
+  * Wszystkie 7 map z przypisanymi logotypami (*_logo.png) i radarami
+  * 4 autentyczne, sprawdzone rzuty na mapę Ancient z dostarczonych zrzutów z gry.
+
+
+================================================================================
+4. GOTOWY BACKEND REST API W FOLDERZE backend/
+================================================================================
+W katalogu backend/ przygotowaliśmy gotowy serwer w Express.js (Node.js).
+
+Dostępne endpointy HTTP:
+- GET    /api/maps         -> Zwraca listę map (Mirage, Dust II, Ancient...)
+- GET    /api/lineups      -> Zwraca listę wszystkich lineupów
+- POST   /api/lineups      -> Dodaje nowy lineup zgłoszony przez gracza (status PENDING: 0)
+- PUT    /api/lineups/:id  -> Zmienia status rzutu (akceptacja: 1, odrzucenie: 2 przez Admina)
+- DELETE /api/lineups/:id  -> Usuwa rzut z bazy danych
+
+Jak uruchomić backend:
+1. Wejdź do folderu backendu:
+     cd backend
+2. Zainstaluj biblioteki:
+     npm install
+3. Uruchom serwer:
+     npm start
+Serwer poinformuje Cię w konsoli:
+  "Backend CS2 Lineups API dziala na http://localhost:3000/api"
+
+
+================================================================================
+5. JAK SPIĄĆ FRONTEND Z BAZĄ DANYCH
+================================================================================
+Aplikacja frontendowa posiada gotowy most danych w pliku:
+  js/services/storageService.js
+
+Aby połączyć stronę z serwerem backendu:
+1. Otwórz plik: js/services/storageService.js
+2. Znajdź linie 18-21 (obiekt CONFIG):
+     export const CONFIG = {
+       USE_REMOTE_API: false, // <-- Zmień na true!
+       API_BASE_URL: 'http://localhost:3000/api'
+     };
+3. Przestaw flagę:
+     USE_REMOTE_API: true
+4. Zbuduj zaktualizowany plik bundle:
+     node scripts/build-bundle.js
+5. Odśwież stronę w przeglądarce (Ctrl + F5).
+Od tej chwili strona pobiera i zapisuje wszystkie dane na żywo w Twojej bazie danych!
+
+
+================================================================================
+6. ZASADY PRACY W ZESPOLE NA GITHUBIE
+================================================================================
+1. BEZPIECZEŃSTWO HASEŁ:
+   Nigdy nie wrzucajcie swoich prywatnych haseł ani pliku backend/.env na GitHuba.
+   Plik backend/.env jest wpisany do .gitignore. Każdy tworzy własny plik .env
+   na podstawie wzorca backend/.env.example.
+
+2. FOLDER node_modules/:
+   Nie wrzucajcie folderu node_modules na GitHuba (jest w .gitignore). Po sklonowaniu
+   repozytorium każdy członek zespołu wpisuje po prostu: npm install.
+
+3. ZRZUTY EKRANU Z GRY:
+   Nowe zrzuty z gry dodawajcie do folderu mapy/ lub assets/images/lineups/.
+   Pamiętajcie o żelaznej regule projektu: jeśli do danego kroku nie macie autentycznego
+   zrzutu z gry, użyjcie czarnego zdjęcia assets/images/black_placeholder.png.
+   Aplikacja automatycznie wyświetli informację o braku zdjęcia i pozwoli je uzupełnić.
+
+4. EDYCJA KODU JAVASCRIPT:
+   Jeśli modyfikujecie pliki w js/models/ lub js/services/, po zakończeniu prac
+   uruchomcie komendę:
+     node scripts/build-bundle.js
+   Zaktualizuje to plik js/bundle.js, dzięki czemu strona zadziała u każdego kolegi
+   zarówno przez serwer, jak i po zwykłym dwukliku na index.html.
+
+
+================================================================================
+KONIEC INSTRUKCJI - POWODZENIA W PROJEKCIE!
+================================================================================

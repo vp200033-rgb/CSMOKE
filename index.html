@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>CS2 Tactical Lineups - Baza Smoke'ów Counter-Strike 2</title>
+  <link rel="stylesheet" href="style.css?v=20261119_02">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💨</text></svg>">
+</head>
+<body>
+  <!-- Subtelna winieta w tle -->
+  <div class="background-vignette"></div>
+
+  <!-- GÓRNY PASEK NAWIGACJI CS2 -->
+  <header class="cs2-topbar">
+    <div class="brand-section" id="navBrandLogo">
+      <div class="cs2-logo-emblem">CS</div>
+      <div class="brand-title-group">
+        <h1>COUNTER-STRIKE <span>2</span></h1>
+        <div class="brand-subtitle">SMOKE LINEUP DATABASE // SUB-TICK TACTICS</div>
+      </div>
+    </div>
+
+    <nav class="nav-tabs-group">
+      <button class="nav-tab-btn active" data-target-view="main-menu-view" id="tabPlay">
+        <span>🎮</span> GRAJ / WYBÓR MAP
+      </button>
+      <button class="nav-tab-btn" data-target-view="admin-view" id="tabModeration">
+        <span>🛡️</span> MODERACJA (ADMIN)
+      </button>
+    </nav>
+
+    <div class="user-panel-section">
+      <!-- Przełącznik dźwięków Web Audio API -->
+      <button class="audio-toggle-btn" id="audioToggleBtn" title="Włącz/Wyłącz dźwięki interfejsu">
+        <span id="audioIcon">🔊</span> DŹWIĘK
+      </button>
+
+      <!-- DYNAMICZNY PANEL KONTA UŻYTKOWNIKA (LOGOWANIE / KARTA GRACZA) -->
+      <div id="userAuthContainer" class="user-auth-wrapper">
+        <!-- Renderowane dynamicznie przez app.js:
+             Dla Gościa: [🔑 Zaloguj] [📝 Rejestracja]
+             Dla Zalogowanego: Avatar + Nick + Rola + [Wyloguj] -->
+      </div>
+    </div>
+  </header>
+
+  <!-- GŁÓWNY OBSZAR WIDOKÓW -->
+  <main class="app-main-viewport">
+    
+    <!-- WIDOK 1: MENU GŁÓWNE CS2 - WYBÓR MAPY -->
+    <section class="view-section active main-menu-view" id="main-menu-view">
+      <div class="menu-hero-header">
+        <div>
+          <h2>WYBIERZ <span>MAPĘ</span> DO ANALIZY LINEUPÓW</h2>
+          <p>Wybierz lokację, aby otworzyć widok radaru z góry i przejrzeć sprawdzone smoke'i w CS2.</p>
+        </div>
+        <div class="quick-search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="globalSearchInput" placeholder="Szukaj smoke'a (np. Mirage Window, Xbox)...">
+        </div>
+      </div>
+
+      <!-- Siatka kart map CS2 -->
+      <div class="maps-selection-grid" id="mapsGridContainer">
+        <!-- Renderowane dynamicznie przez app.js -->
+      </div>
+
+      <!-- Panel informacyjny & Bindy CS2 -->
+      <div class="tactical-cs2-banner">
+        <div class="banner-info">
+          <h3>⚡ CS2 SUB-TICK &amp; JUMPTHROW MECHANICS</h3>
+          <p>
+            W Counter-Strike 2 wszystkie rzuty jumpthrow są zsynchronizowane dzięki architekturze sub-tick. 
+            Nie potrzebujesz już skomplikowanych aliasów autoexec – standardowy bind spacji lub dedykowany przycisk działa w 100% powtarzalnie!
+          </p>
+        </div>
+        <div class="banner-bind-box">
+          <span class="bind-label">Polecany bind Jumpthrow w CS2:</span>
+          <code class="bind-command">bind "c" "+jump; -attack; -attack2"</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- WIDOK 2: RADAR MAPY Z GÓRY (OVERHEAD VIEW) -->
+    <section class="view-section radar-view-container" id="radar-view">
+      <div class="radar-subbar">
+        <div class="subbar-left">
+          <button class="back-to-menu-btn" id="backToMenuBtn">
+            <span>◀</span> MENU GŁÓWNE
+          </button>
+          <div class="radar-map-title-group">
+            <h2 id="radarCurrentMapTitle">DE_MIRAGE</h2>
+          </div>
+        </div>
+
+        <div class="radar-filters-group">
+          <!-- Filtry strony: T / CT -->
+          <div class="filter-btn-group" id="sideFilterGroup">
+            <button class="filter-btn active" data-side="ALL">WSZYSTKIE</button>
+            <button class="filter-btn filter-t" data-side="T">TERRORYŚCI (T)</button>
+            <button class="filter-btn filter-ct" data-side="CT">ANTYTERRORYŚCI (CT)</button>
+          </div>
+
+          <!-- Filtry strefy: MID / A / B -->
+          <div class="filter-btn-group" id="siteFilterGroup">
+            <button class="filter-btn active" data-site="ALL">CAŁA MAPA</button>
+            <button class="filter-btn" data-site="MID">MID</button>
+            <button class="filter-btn" data-site="A">SITE A</button>
+            <button class="filter-btn" data-site="B">SITE B</button>
+          </div>
+
+          <!-- Filtry typu rzutu (wg TrowType z UML) -->
+          <div class="filter-btn-group" id="throwTypeFilterGroup">
+            <button class="filter-btn active" data-throw="ALL">RZUT: WSZYSTKIE</button>
+            <button class="filter-btn" data-throw="0">STAND</button>
+            <button class="filter-btn" data-throw="1">JUMPTHROW</button>
+            <button class="filter-btn" data-throw="2">RUN JUMP</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="radar-main-workspace">
+        <!-- Interaktywny radar mapy z góry -->
+        <div class="radar-viewport" id="radarViewport">
+          <div class="radar-stage" id="radarStage">
+            <!-- Obraz mapy z góry z folderu /mapy/ -->
+            <img src="mapy/mirage.png" alt="Widok mapy z góry" class="radar-image" id="radarImage">
+            
+            <!-- SVG do rysowania linii lotu i trajektorii -->
+            <svg class="radar-svg-overlay" id="radarSvgOverlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="trajGradientT" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#d97724" stop-opacity="0.9" />
+                  <stop offset="100%" stop-color="#f5b74f" stop-opacity="1" />
+                </linearGradient>
+                <linearGradient id="trajGradientCT" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#3880c9" stop-opacity="0.9" />
+                  <stop offset="100%" stop-color="#80bdff" stop-opacity="1" />
+                </linearGradient>
+                <marker id="arrowT" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="2.4" markerHeight="2.4" orient="auto">
+                  <path d="M 0 2 L 7 5 L 0 8 z" fill="#f5b74f" />
+                </marker>
+                <marker id="arrowCT" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="2.4" markerHeight="2.4" orient="auto">
+                  <path d="M 0 2 L 7 5 L 0 8 z" fill="#80bdff" />
+                </marker>
+              </defs>
+            </svg>
+
+            <!-- Kontener znaczników startu i lądowania -->
+            <div class="radar-markers-container" id="radarMarkersContainer"></div>
+          </div>
+
+          <!-- Kontrolki powiększenia / resetu -->
+          <div class="radar-zoom-controls">
+            <button class="zoom-btn" id="zoomInBtn" title="Przybliż">+</button>
+            <button class="zoom-btn" id="zoomOutBtn" title="Oddal">-</button>
+            <button class="zoom-btn" id="zoomResetBtn" title="Resetuj pozycję">↺</button>
+          </div>
+
+          <!-- Baner trybu wskazywania współrzędnych rzutu na radarze -->
+          <div class="radar-picking-banner" id="radarPickingBanner" style="display: none;">
+            <span class="picking-icon">🎯</span>
+            <span id="radarPickingText">KLIKNIJ NA RADARZE: Wskaż miejsce rzutu gracza (START)</span>
+            <button type="button" class="back-to-menu-btn" id="cancelPickingBtn" style="padding: 4px 10px; font-size: 11px;">Anuluj</button>
+          </div>
+        </div>
+
+        <!-- Boczny panel listy lineupów na danej mapie -->
+        <aside class="radar-lineup-sidebar">
+          <div class="sidebar-header">
+            <h3>LINEUPY SMOKE (<span id="lineupCountBadge">0</span>)</h3>
+            <button class="add-lineup-btn-sm" id="openAddLineupModalBtn">
+              <span>+</span> DODAJ
+            </button>
+          </div>
+          <div class="sidebar-lineups-list" id="sidebarLineupsList">
+            <!-- Dynamicznie generowane elementy listy -->
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- WIDOK 3: PANEL MODERACJI & WERYFIKACJI (ADMIN) -->
+    <section class="view-section admin-view-container" id="admin-view">
+      <div class="menu-hero-header">
+        <div>
+          <h2>🛡️ PANEL WERYFIKACJI LINEUPÓW <span>(ADMIN)</span></h2>
+          <p>Administratorzy mogą zatwierdzać, odrzucać lub usuwać zgłoszone lineupy graczy.</p>
+        </div>
+      </div>
+
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tytuł Lineupu</th>
+            <th>Mapa</th>
+            <th>Typ Rzutu</th>
+            <th>Strona / Bombsite</th>
+            <th>Status</th>
+            <th>Akcje</th>
+          </tr>
+        </thead>
+        <tbody id="adminTableBody">
+          <!-- Dynamicznie generowane wiersze moderacji -->
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       MODAL 1: SZCZEGÓŁY LINEUPU & SCREEN Z GRY (KLUCZOWY WYMÓG)
+       ========================================================================== -->
+  <div class="cs2-modal-overlay" id="lineupDetailModal">
+    <div class="cs2-modal-window">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 id="modalLineupTitle">Mirage: Smoke na Okno (Window) z T-Spawn</h2>
+          <div id="modalBadgesRow" style="display: inline-flex; gap: 6px;"></div>
+        </div>
+        <button class="modal-close-btn" id="closeDetailModalBtn">&times;</button>
+      </div>
+
+      <div class="modal-body-content">
+        <!-- Lewa kolumna: Zrzut ekranu z gry -->
+        <div class="modal-screen-column">
+          
+          <!-- SPECJALNY BANER O CZARNYM ZDJĘCIU ZGODNY Z WYTYCZNYMI -->
+          <div class="placeholder-notice-box" id="placeholderNoticeBox">
+            <span class="notice-icon">⚠️</span>
+            <div class="notice-text">
+              <h4>INFORMACJA O ZRZUCIE EKRANU Z GRY</h4>
+              <p>
+                Brak autentycznego zrzutu ekranu z gry dla tego rzutu. Zgodnie z wytycznymi wyświetlono <strong>czarne zdjęcie zastępcze (black_placeholder.png)</strong> bez generowania sztucznych grafik. 
+                Możesz podmienić plik w folderze <code>assets/images/lineups/</code> lub przeciągnąć zrzut poniżej.
+              </p>
+            </div>
+          </div>
+
+          <!-- Zakładki widoków zrzutów ekranu (2 kroki: Jak wycelować + Gdzie spada) -->
+          <div class="screen-tabs-bar">
+            <button class="screen-tab-btn active" data-screen-type="crosshair">🎯 1. JAK WYCELOWAĆ</button>
+            <button class="screen-tab-btn" data-screen-type="landing">💨 2. GDZIE SPADA SMOKE</button>
+          </div>
+
+          <!-- Okno wyświetlania zrzutu ekranu z gry (wyłącznie oryginalny zrzut z CS2, brak sztucznych nakładek) -->
+          <div class="screen-display-wrapper">
+            <img src="assets/images/black_placeholder.png" alt="Zrzut ekranu z CS2" class="lineup-screen-img" id="modalScreenImg">
+            <div class="screen-step-badge" id="screenStepBadge">KROK 1/2: CELOWNIK I PUNKT RZUTU</div>
+          </div>
+
+          <!-- Przełączanie kroków rzutu -->
+          <div class="screen-step-nav-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px;">
+            <button type="button" class="back-to-menu-btn" id="prevStepBtn" style="padding: 4px 10px; font-size: 11px;">◀ Poprzedni</button>
+            <span id="screenCurrentStepLabel" style="font-family: var(--cs2-font-tactical); color: var(--cs2-gold); font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">1. CELOWNIK I PUNKT RZUTU</span>
+            <button type="button" class="back-to-menu-btn" id="nextStepBtn" style="padding: 4px 10px; font-size: 11px;">Następny ▶</button>
+          </div>
+
+          <!-- Uploader / Dropzone dla zespołu i gracza -->
+          <div class="upload-dropzone-box" id="uploadDropzone">
+            <span>📸 Przeciągnij lub kliknij, aby wgrać własny zrzut z gry CS2 dla aktywnego kroku</span>
+            <input type="file" id="screenshotFileInput" accept="image/*" style="display: none;">
+          </div>
+        </div>
+
+        <!-- Prawa kolumna: Instrukcja, typ rzutu i bindy -->
+        <div class="modal-details-column">
+          <!-- Karta typu rzutu -->
+          <div class="detail-section">
+            <h4>TYP RZUTU</h4>
+            <div class="throwtype-spec-card" id="modalThrowTypeCard">
+              <span class="throwtype-icon">🦘</span>
+              <div>
+                <div class="throwtype-title" id="modalThrowTypeName">Jumpthrow</div>
+                <div class="throwtype-subtext" id="modalThrowTypeDesc">Rzut w najwyższym punkcie skoku</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Krok po kroku -->
+          <div class="detail-section">
+            <h4>INSTRUKCJA WYKONANIA RZUTU</h4>
+            <ul class="steps-list" id="modalStepsList">
+              <!-- Renderowane dynamicznie -->
+            </ul>
+          </div>
+
+          <!-- Opis taktyczny -->
+          <div class="detail-section">
+            <h4>ANALIZA TAKTYCZNA</h4>
+            <p id="modalDescription" style="font-size: 13px; color: var(--cs2-text-muted); line-height: 1.5;"></p>
+          </div>
+
+          <!-- Polecany bind do konsoli CS2 -->
+          <div class="detail-section">
+            <h4>KONSOLA CS2 (ZALECANY BIND)</h4>
+            <div class="copy-bind-card">
+              <code id="modalBindCode" style="color: #58a6ff; font-size: 12px;">bind "c" "+jump; -attack; -attack2"</code>
+              <button class="copy-bind-btn" id="copyBindBtn">KOPIUJ</button>
+            </div>
+          </div>
+
+          <!-- Panel moderacji wewnątrz modalu (zgodnie z verifyLineup z diagramu UML) -->
+          <div class="admin-verification-box" id="modalAdminBox">
+            <div>
+              <span style="font-size: 11px; color: var(--cs2-text-muted);">ZARZĄDZANIE (ADMIN):</span>
+              <div id="modalStatusBadge" style="margin-top: 4px;"></div>
+            </div>
+            <div class="admin-action-btn-group">
+              <button class="btn-approve" id="modalApproveBtn">✓ Zatwierdź</button>
+              <button class="btn-reject" id="modalRejectBtn">✕ Odrzuć</button>
+            </div>
+          </div>
+
+          <!-- Pasek usuwania lineupu (dla Admina lub Autora) -->
+          <div id="modalLineupActionsBox" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--cs2-border); display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; color: var(--cs2-text-dim);">OPCJE WPISU:</span>
+            <button type="button" class="btn-delete" id="modalDeleteBtn" style="display: none; padding: 6px 14px; font-weight: bold;">
+              🗑️ Usuń ten Smoke
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 2: DODAJ WŁASNY LINEUP
+       ========================================================================== -->
+  <div class="cs2-modal-overlay" id="addLineupModal">
+    <div class="cs2-modal-window" style="width: 620px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2>DODAJ NOWY LINEUP SMOKE <span>(CS2)</span></h2>
+        </div>
+        <button class="modal-close-btn" id="closeAddModalBtn">&times;</button>
+      </div>
+
+      <form id="addLineupForm" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;">
+        <div>
+          <label style="display: block; font-family: var(--cs2-font-heading); font-size: 12px; color: var(--cs2-gold); margin-bottom: 6px;">TYTUŁ LINEUPU</label>
+          <input type="text" id="newLineupTitle" required placeholder="np. Mirage: Smoke na Jungle z T-Roof" style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="display: block; font-family: var(--cs2-font-heading); font-size: 12px; color: var(--cs2-gold); margin-bottom: 6px;">MAPA</label>
+            <select id="newLineupMapSelect" style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;">
+              <!-- Mapy -->
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-family: var(--cs2-font-heading); font-size: 12px; color: var(--cs2-gold); margin-bottom: 6px;">TYP RZUTU</label>
+            <select id="newLineupThrowType" style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;">
+              <option value="0">STAND (Rzut ze stania)</option>
+              <option value="1">JUMPTHROW (Rzut ze skoku)</option>
+              <option value="2">RUN_JUMPTHROW (Rzut z biegu i skoku)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="display: block; font-family: var(--cs2-font-heading); font-size: 12px; color: var(--cs2-gold); margin-bottom: 6px;">STRONA</label>
+            <select id="newLineupSide" style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;">
+              <option value="T">Terroryści (T)</option>
+              <option value="CT">Antyterroryści (CT)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-family: var(--cs2-font-heading); font-size: 12px; color: var(--cs2-gold); margin-bottom: 6px;">STREFA / BOMBSITE</label>
+            <select id="newLineupSite" style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;">
+              <option value="MID">MID (Środek)</option>
+              <option value="A">SITE A</option>
+              <option value="B">SITE B</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- WSKAZANIE POZYCJI NA MAPIE - jedyna metoda ustawiania współrzędnych -->
+        <div style="background: rgba(222,155,53,0.07); border: 1px solid var(--cs2-gold); border-radius: 6px; padding: 14px;">
+          <div style="font-family: var(--cs2-font-heading); font-size: 12px; color: var(--cs2-gold); margin-bottom: 10px;">📍 WSKAŻ POZYCJE NA MAPIE (WYMAGANE)</div>
+          <div id="coordsStatusDisplay" style="font-size: 12px; color: var(--cs2-text-dim); margin-bottom: 10px; min-height: 36px;">
+            <span id="coordsStatusText">Kliknij przycisk poniżej, aby otworzyć mapę i wskazać punkt rzutu oraz lądowania smoke'a.</span>
+          </div>
+          <button type="button" id="pickCoordsOnRadarBtn" class="back-to-menu-btn" style="border-color: var(--cs2-gold); color: var(--cs2-gold); width: 100%; padding: 10px; font-weight: bold; background: rgba(222, 155, 53, 0.1);">
+            🗺️ Otwórz mapę i wskaż pozycje
+          </button>
+        </div>
+
+        <!-- 2 zrzuty ekranu: jak wycelować + gdzie spada -->
+        <div>
+          <label style="display: block; font-family: var(--cs2-font-heading); font-size: 12px; color: var(--cs2-gold); margin-bottom: 6px;">ZRZUTY EKRANU Z GRY CS2 (OPCJONALNIE)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 4px; border: 1px solid var(--cs2-border);">
+              <label style="font-size: 11px; color: var(--cs2-gold); display: block; margin-bottom: 6px;">🎯 1. Jak wycelować (AIM):</label>
+              <input type="file" id="newLineupCrosshairFile" accept="image/*" style="font-size: 10px; width: 100%; color: #aaa;">
+            </div>
+            <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 4px; border: 1px solid var(--cs2-border);">
+              <label style="font-size: 11px; color: var(--cs2-gold); display: block; margin-bottom: 6px;">💨 2. Gdzie spada smoke:</label>
+              <input type="file" id="newLineupLandingFile" accept="image/*" style="font-size: 10px; width: 100%; color: #aaa;">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label style="display: block; font-family: var(--cs2-font-heading); font-size: 12px; color: var(--cs2-gold); margin-bottom: 6px;">SZCZEGÓŁOWY OPIS &amp; KROKI WYKONANIA</label>
+          <textarea id="newLineupDesc" rows="3" placeholder="Wciśnij się w narożnik, wyceluj w wyznaczony punkt i wykonaj jumpthrow..." style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;"></textarea>
+        </div>
+
+        <div style="background: rgba(222, 155, 53, 0.08); border: 1px solid var(--cs2-gold); padding: 12px; border-radius: 4px;">
+          <p style="font-size: 11px; color: var(--cs2-gold-light); margin-bottom: 6px;">
+            🛡️ <strong>System Weryfikacji:</strong> Zwykły użytkownik dodaje lineup ze statusem <code>OCZEKUJE</code>. Po wysłaniu rzut trafi do panelu Administratora, który może go zatwierdzić lub odrzucić.
+          </p>
+          <p style="font-size: 11px; color: var(--cs2-text-dim);">
+            ℹ️ Jeżeli nie wybierzesz zrzutów ekranu z gry, automatycznie zostanie przypisane czarne zdjęcie zastępcze.
+          </p>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+          <button type="button" class="back-to-menu-btn" id="cancelAddLineupBtn">Anuluj</button>
+          <button type="submit" id="submitAddLineupBtn" class="map-action-btn" style="background: var(--cs2-gold); color: #0d1117; opacity: 0.5; cursor: not-allowed;" disabled>Zapisz Lineup</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MODAL 3: LOGOWANIE I REJESTRACJA KONT (USER & ADMIN)
+       ========================================================================== -->
+  <div class="cs2-modal-overlay" id="authModal">
+    <div class="cs2-modal-window" style="width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 id="authModalTitle">LOGOWANIE <span>CS2</span></h2>
+        </div>
+        <button class="modal-close-btn" id="closeAuthModalBtn">&times;</button>
+      </div>
+
+      <!-- Zakładki Logowanie / Rejestracja -->
+      <div class="screen-tabs-bar" style="margin: 0; border-radius: 0; border-left: none; border-right: none;">
+        <button class="screen-tab-btn active" id="authTabLogin">🔑 ZALOGUJ SIĘ</button>
+        <button class="screen-tab-btn" id="authTabRegister">📝 UTWÓRZ KONTO</button>
+      </div>
+
+      <div style="padding: 24px;">
+        <!-- Komunikat błędu / sukcesu -->
+        <div id="authAlertBox" style="display: none; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; font-size: 12px;"></div>
+
+        <!-- FORMULARZ LOGOWANIA -->
+        <form id="loginForm" style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label style="display: block; font-family: var(--cs2-font-heading); font-size: 11px; color: var(--cs2-gold); margin-bottom: 6px;">ADRES E-MAIL</label>
+            <input type="email" id="loginEmail" required placeholder="np. admin@cs2lineups.local" style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; font-family: var(--cs2-font-heading); font-size: 11px; color: var(--cs2-gold); margin-bottom: 6px;">HASŁO</label>
+            <input type="password" id="loginPassword" required placeholder="Wpisz hasło..." style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;">
+          </div>
+
+          <!-- Szybkie konta demo dla testów -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--cs2-border); border-radius: 4px; padding: 10px; margin-top: 4px;">
+            <div style="font-size: 11px; color: var(--cs2-gold); font-weight: bold; margin-bottom: 6px;">SZYBKIE LOGOWANIE DOSTĘPNYMI KONTAMI:</div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="back-to-menu-btn" id="quickLoginAdminBtn" style="flex: 1; padding: 6px 8px; font-size: 10px; border-color: var(--cs2-gold);">
+                👑 Administrator
+              </button>
+              <button type="button" class="back-to-menu-btn" id="quickLoginPlayerBtn" style="flex: 1; padding: 6px 8px; font-size: 10px;">
+                🎖️ Gracz (User)
+              </button>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+            <button type="submit" class="map-action-btn" style="background: var(--cs2-gold); color: #0d1117; width: 100%; justify-content: center;">Zaloguj się</button>
+          </div>
+        </form>
+
+        <!-- FORMULARZ REJESTRACJI -->
+        <form id="registerForm" style="display: none; flex-direction: column; gap: 14px;">
+          <div>
+            <label style="display: block; font-family: var(--cs2-font-heading); font-size: 11px; color: var(--cs2-gold); margin-bottom: 6px;">NICK GRACZA (CS2)</label>
+            <input type="text" id="registerNick" required placeholder="np. SmokeMaster_CS" style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; font-family: var(--cs2-font-heading); font-size: 11px; color: var(--cs2-gold); margin-bottom: 6px;">ADRES E-MAIL</label>
+            <input type="email" id="registerEmail" required placeholder="twoj_mail@domena.pl" style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; font-family: var(--cs2-font-heading); font-size: 11px; color: var(--cs2-gold); margin-bottom: 6px;">HASŁO</label>
+            <input type="password" id="registerPassword" required placeholder="Minimum 4 znaki..." style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="display: block; font-family: var(--cs2-font-heading); font-size: 11px; color: var(--cs2-gold); margin-bottom: 6px;">POWTÓRZ HASŁO</label>
+            <input type="password" id="registerPasswordConfirm" required placeholder="Powtórz hasło..." style="width: 100%; background: #0a0e14; border: 1px solid var(--cs2-border-light); color: #fff; padding: 10px; border-radius: 4px;">
+          </div>
+
+          <div style="background: rgba(222, 155, 53, 0.08); border: 1px solid var(--cs2-gold); padding: 10px; border-radius: 4px; font-size: 11px; color: var(--cs2-gold-light);">
+            ℹ️ Nowo zarejestrowane konto otrzymuje uprawnienia <strong>GRACZ (USER)</strong>, umożliwiające dodawanie własnych lineupów na mapach i ich moderację.
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+            <button type="submit" class="map-action-btn" style="background: var(--cs2-gold); color: #0d1117; width: 100%; justify-content: center;">Utwórz konto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Główny skrypt aplikacji (działa na serwerze http:// oraz bezbłędnie po dwukliku z dysku file:///) -->
+  <script src="js/bundle.js?v=20261119_02"></script>
+</body>
+</html>
